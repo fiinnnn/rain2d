@@ -15,15 +15,6 @@
 //! const WIDTH: usize = 640;
 //! const HEIGHT: usize = 360;
 //!
-//! fn main() {
-//!     let mut core = RainCore::init("example app",
-//!         WIDTH,
-//!         HEIGHT,
-//!         true).unwrap();
-//!
-//!     core.run(&mut ExampleApp {});
-//! }
-//!
 //! // can be used to store application state
 //! struct ExampleApp;
 //!
@@ -32,6 +23,13 @@
 //!         rain.fill_triangle(IVec2::new(120, 300), IVec2::new(520, 300), IVec2::new(320, 100), WHITE);
 //!     }
 //! }
+//!
+//! let mut core = RainCore::init("example app",
+//!     WIDTH,
+//!     HEIGHT,
+//!     true).unwrap();
+//!
+//! core.run(&mut ExampleApp {});
 //! ```
 
 use minifb::{Window, WindowOptions, Key};
@@ -59,15 +57,6 @@ mod rendertarget;
 /// ```no_run
 /// use rain2d::*;
 ///
-/// fn main() {
-///     let mut core = RainCore::init("example app",
-///         640,
-///         360,
-///         true).unwrap();
-///
-///     core.run(&mut App {});
-/// }
-///
 /// struct App;
 ///
 /// impl RainApp for App {
@@ -80,6 +69,13 @@ mod rendertarget;
 ///     // cleanup
 ///     fn on_exit(&mut self) {}
 /// }
+///
+/// let mut core = RainCore::init("example app",
+///     640,
+///     360,
+///     true).unwrap();
+///
+/// core.run(&mut App {});
 /// ```
 pub trait RainApp {
     /// Called once when the application starts
@@ -136,8 +132,8 @@ impl RainCore {
             WindowOptions::default())?;
 
         Ok(RainCore {
-            active: true,
             exit_on_esc,
+            active: true,
             window_title: window_title.to_string(),
             window,
             render_target: RenderTarget::new(width, height),
@@ -212,14 +208,12 @@ impl RainCore {
     ///```no_run
     ///# use rain2d::*;
     ///#
-    ///# fn main() {
-    ///#    let mut core = RainCore::init("example app",
-    ///#        640,
-    ///#        360,
-    ///#        true).unwrap();
+    ///# let mut core = RainCore::init("example app",
+    ///#     640,
+    ///#     360,
+    ///#     true).unwrap();
     ///#
-    ///#    core.run(&mut App {});
-    ///# }
+    ///# core.run(&mut App {});
     ///#
     ///# struct App;
     ///#
