@@ -1,27 +1,32 @@
-name: Rust
+name: Tests
 
 on: [push]
 
 jobs:
-  clippy:
-    name: Lint
+  clippy_check:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v1
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          components: clippy
           override: true
-
-      - run: rustup component add clippy
-      - run: cargo clippy
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
   
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v1
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
     - name: Build
       run: cargo build --verbose
     - name: Run tests
