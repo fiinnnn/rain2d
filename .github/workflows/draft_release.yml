@@ -1,9 +1,9 @@
-name: release
+name: draft release
 
 on:
   push:
     branches:
-      - master
+      - dev
 
 jobs:
   release:
