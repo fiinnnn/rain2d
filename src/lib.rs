@@ -17,7 +17,7 @@
 //!
 //! use rain2d::{
 //!     core::*,
-//!     math::vec2y
+//!     math::vec2,
 //! };
 //!
 //! const WIDTH: usize = 640;
