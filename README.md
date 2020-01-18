@@ -1,2 +1,2 @@
 # rain2d
-![](https://github.com/FInnvos123/rain2d/workflows/Tests/badge.svg)
+![](https://github.com/FInnvos123/rain2d/workflows/build/badge.svg)
