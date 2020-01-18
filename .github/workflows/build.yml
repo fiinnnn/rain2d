@@ -18,6 +18,17 @@ jobs:
           components: clippy
           override: true
 
+      - name: Build
+        run: cargo build --verbose
+
+      - name: Run tests
+        run: cargo test --verbose
+
+      - name: Clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Cache cargo registry
         uses: actions/cache@v1
         with:
@@ -35,14 +46,3 @@ jobs:
         with:
           path: target
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Build
-        run: cargo build --verbose
-
-      - name: Run tests
-        run: cargo test --verbose
-
-      - name: Clippy
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
