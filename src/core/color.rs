@@ -48,7 +48,7 @@ impl Color {
     ///
     /// ### Example
     /// ```
-    ///# use rain2d::Color;
+    ///# use rain2d::core::Color;
     /// let color = Color::rgb(255, 120, 120);
     /// ```
     pub fn rgb(r: u8, g: u8, b: u8) -> Self {
@@ -59,7 +59,7 @@ impl Color {
     ///
     /// ### Example
     /// ```
-    ///# use rain2d::Color;
+    ///# use rain2d::core::Color;
     /// let color = Color::rgba(255, 120, 120, 125);
     /// ```
     pub fn rgba(r: u8, g: u8, b: u8, a: u8) -> Self {

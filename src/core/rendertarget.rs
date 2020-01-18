@@ -1,4 +1,4 @@
-use crate::Color;
+use crate::core::Color;
 
 pub struct RenderTarget {
     pub width: usize,
