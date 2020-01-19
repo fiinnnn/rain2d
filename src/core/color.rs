@@ -88,6 +88,18 @@ mod test {
     use super::*;
 
     #[test]
+    fn test_color_from_rgb() {
+        let color = Color::rgb(128, 255, 50);
+        assert_eq!(color, Color { r: 128, g: 255, b: 50, a: 255 });
+    }
+
+    #[test]
+    fn test_color_from_rgba() {
+        let color = Color::rgba(128, 255, 50, 150);
+        assert_eq!(color, Color { r: 128, g: 255, b: 50, a: 150 });
+    }
+
+    #[test]
     fn test_color_to_u32() {
         let color: u32 = Color { r: 124, g: 58, b: 231, a: 255}.into();
         assert_eq!(color, 0xFF7C_3AE7);
