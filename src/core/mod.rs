@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 //! rain2d core functionality
 
-use minifb::{Window, WindowOptions, Key};
+use minifb::{Window, WindowOptions, KeyRepeat, MouseMode};
 use std::{
     time::Duration,
     error::Error,
@@ -10,10 +10,19 @@ use std::{
 };
 
 pub use crate::core::color::*;
+
+/// Reexported from minifb
+///
+pub use minifb::Key as Key;
+
+/// Reexported from minifb
+///
+pub use minifb::MouseButton as MouseButton;
+
 use crate::core::rendertarget::*;
 use crate::math::{Vec2, IVec2, vec2};
 
-pub mod color;
+mod color;
 mod rendertarget;
 
 #[allow(unused_variables)]
@@ -196,6 +205,98 @@ impl RainCore {
     /// [`on_exit`]: trait.RainApp.html#method.on_exit
     pub fn exit(&mut self) {
         self.active = false;
+    }
+
+    /// Checks if the key is currently down
+    ///
+    /// ### Example
+    /// ```no_run
+    /// # use rain2d::core::*;
+    /// # let core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// if core.key_down(Key::Space) {
+    ///     println!("Spacebar down");
+    /// }
+    /// ```
+    pub fn key_down(&self, key: Key) -> bool {
+        self.window.is_key_down(key)
+    }
+
+    /// Checks if the key was pressed (not held) since the last update
+    pub fn key_pressed(&self, key: Key) -> bool {
+        self.window.is_key_pressed(key, KeyRepeat::No)
+    }
+
+    /// Checks if the key was released since the last update
+    pub fn key_released(&self, key: Key) -> bool {
+        self.window.is_key_released(key)
+    }
+
+    /// Gets all keys that are currently down
+    ///
+    /// ### Example
+    /// ```no_run
+    /// # use rain2d::core::*;
+    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// core.get_keys().map(|keys| {
+    ///     for key in keys {
+    ///         match key {
+    ///             Key::A => println!("A key down"),
+    ///             Key::Escape => core.exit(),
+    ///             _ => (),
+    ///         }
+    ///     }
+    /// });
+    /// ```
+    pub fn get_keys(&self) -> Option<Vec<Key>> {
+        self.window.get_keys()
+    }
+
+    /// Get mouse position relative to the window, (0, 0) in upper left corner
+    ///
+    /// ### Example
+    /// ```no_run
+    /// # use rain2d::core::*;
+    /// # let core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// if let Some(pos) = core.get_mouse_pos() {
+    ///     println!("x: {}, y: {}", pos.x, pos.y);
+    /// }
+    /// ```
+    pub fn get_mouse_pos(&self) -> Option<Vec2> {
+        if let Some((x, y)) = self.window.get_mouse_pos(MouseMode::Pass) {
+            return Some(vec2(x, y));
+        }
+        None
+    }
+
+    /// Checks if the button is currently down
+    ///
+    /// ### Example
+    /// ```no_run
+    /// # use rain2d::core::*;
+    /// # let core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// if core.mouse_button_down(MouseButton::Left) {
+    ///     println!("Left mouse button down");
+    /// }
+    /// ```
+    pub fn mouse_button_down(&self, button: MouseButton) -> bool {
+        self.window.get_mouse_down(button)
+    }
+
+    /// Get current scroll wheel movement
+    ///
+    /// ### Example
+    /// ```no_run
+    /// # use rain2d::core::*;
+    /// # let core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// if let Some(scroll) = core.get_scroll_wheel() {
+    ///     println!("x: {}, y: {}", scroll.x, scroll.y);
+    /// }
+    /// ```
+    pub fn get_scroll_wheel(&self) -> Option<Vec2> {
+        if let Some((x, y)) = self.window.get_scroll_wheel() {
+            return Some(vec2(x, y));
+        }
+        None
     }
 
     /// Draws a pixel if the location is in bounds after casting the coordinates to `i32`
