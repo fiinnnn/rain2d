@@ -1,4 +1,5 @@
 bug: ['bug/*']
-documentation: ['doc/*']
-feature: ['feat/*', 'feature/*']
 chore: ['chore/*']
+documentation: ['doc/*']
+enhancement: ['enhance/*']
+feature: ['feat/*', 'feature/*']

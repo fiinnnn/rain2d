@@ -2,9 +2,10 @@ name-template: 'v$NEXT_PATCH_VERSION'
 tag-template: 'v$NEXT_PATCH_VERSION'
 
 categories:
-  - title: 'Features'
+  - title: 'Changes'
     labels:
       - 'feature'
+      - 'enhancement'
 
   - title: 'Bugfixes'
     labels:
@@ -20,6 +21,6 @@ exclude-labels:
 change-template: '- $TITLE (#$NUMBER) @$AUTHOR'
 
 template: |
-  ## Changes
+  Version $NEXT_PATCH_VERSION
 
   $CHANGES
