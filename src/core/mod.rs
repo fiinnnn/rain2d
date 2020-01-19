@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 //! rain2d core functionality
 
-use minifb::{Window, WindowOptions, Key};
+use minifb::{Window, WindowOptions, KeyRepeat};
 use std::{
     time::Duration,
     error::Error,
@@ -10,10 +10,15 @@ use std::{
 };
 
 pub use crate::core::color::*;
+
+/// Reexported from minifb
+///
+pub use minifb::Key as Key;
+
 use crate::core::rendertarget::*;
 use crate::math::{Vec2, IVec2, vec2};
 
-pub mod color;
+mod color;
 mod rendertarget;
 
 #[allow(unused_variables)]
@@ -196,6 +201,48 @@ impl RainCore {
     /// [`on_exit`]: trait.RainApp.html#method.on_exit
     pub fn exit(&mut self) {
         self.active = false;
+    }
+
+    /// Checks if the key is currently down
+    ///
+    /// ### Example
+    /// ```no_run
+    /// # use rain2d::core::*;
+    /// # let core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// core.key_down(Key::Space);
+    /// ```
+    pub fn key_down(&self, key: Key) -> bool {
+        self.window.is_key_down(key)
+    }
+
+    /// Checks if the key was pressed (not held) since the last update
+    pub fn key_pressed(&self, key: Key) -> bool {
+        self.window.is_key_pressed(key, KeyRepeat::No)
+    }
+
+    /// Checks if the key was released since the last update
+    pub fn key_released(&self, key: Key) -> bool {
+        self.window.is_key_released(key)
+    }
+
+    /// Gets all keys that are currently down
+    ///
+    /// ### Example
+    /// ```no_run
+    /// # use rain2d::core::*;
+    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// core.get_keys().map(|keys| {
+    ///     for key in keys {
+    ///         match key {
+    ///             Key::A => println!("A key down"),
+    ///             Key::Escape => core.exit(),
+    ///             _ => (),
+    ///         }
+    ///     }
+    /// });
+    /// ```
+    pub fn get_keys(&self) -> Option<Vec<Key>> {
+        self.window.get_keys()
     }
 
     /// Draws a pixel if the location is in bounds after casting the coordinates to `i32`

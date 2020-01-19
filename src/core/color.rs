@@ -1,7 +1,5 @@
-//! Color representation
-
 #[derive(Debug, PartialEq, Copy, Clone)]
-/// Struct to represent color
+/// Color representation
 pub struct Color {
     /// Red component
     pub r: u8,
