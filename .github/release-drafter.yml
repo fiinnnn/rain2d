@@ -21,6 +21,4 @@ exclude-labels:
 change-template: '- $TITLE (#$NUMBER) @$AUTHOR'
 
 template: |
-  Version $NEXT_PATCH_VERSION
-
   $CHANGES
