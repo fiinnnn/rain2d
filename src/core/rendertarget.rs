@@ -22,7 +22,46 @@ impl RenderTarget {
         }
     }
 
-    pub fn get_pixel(&self, x: usize, y: usize) -> Color {
-        self.data[x + y * self.width].into()
+    pub fn get_pixel(&self, x: i32, y: i32) -> Option<Color> {
+        if x >= 0 && x < self.width as i32 && y >= 0 && y < self.height as i32 {
+            return Some(self.data[x as usize + y as usize * self.width].into());
+        }
+        None
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::core::color::WHITE;
+
+    #[test]
+    fn test_new_rendertarget() {
+        let target = RenderTarget::new(10, 10);
+        assert_eq!(target.width, 10);
+        assert_eq!(target.height, 10);
+        assert_eq!(target.data.len(), 10 * 10);
+        assert_eq!(target.data.iter().sum::<u32>(), 0);
+    }
+
+    #[test]
+    fn test_set_pixel() {
+        let mut target = RenderTarget::new(10, 10);
+        let (x, y) = (5, 2);
+        let color = WHITE;
+        target.set_pixel(x, y, color);
+
+        assert_eq!(target.data[x as usize + y as usize * 10], color.into());
+    }
+
+    #[test]
+    fn test_get_pixel() {
+        let mut target = RenderTarget::new(10, 10);
+        let (x, y) = (7, 3);
+        let color = WHITE;
+        target.set_pixel(x, y, color);
+
+        assert_eq!(target.get_pixel(x, y), Some(color));
+        assert_eq!(target.get_pixel(100, 100), None);
     }
 }
