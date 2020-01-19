@@ -213,7 +213,9 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # let core = RainCore::init("example app", 640, 360, true).unwrap();
-    /// core.key_down(Key::Space);
+    /// if core.key_down(Key::Space) {
+    ///     println!("Spacebar down");
+    /// }
     /// ```
     pub fn key_down(&self, key: Key) -> bool {
         self.window.is_key_down(key)
@@ -272,7 +274,9 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # let core = RainCore::init("example app", 640, 360, true).unwrap();
-    /// core.mouse_button_down(MouseButton::Left);
+    /// if core.mouse_button_down(MouseButton::Left) {
+    ///     println!("Left mouse button down");
+    /// }
     /// ```
     pub fn mouse_button_down(&self, button: MouseButton) -> bool {
         self.window.get_mouse_down(button)
