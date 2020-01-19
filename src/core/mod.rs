@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 //! rain2d core functionality
 
-use minifb::{Window, WindowOptions, KeyRepeat};
+use minifb::{Window, WindowOptions, KeyRepeat, MouseMode};
 use std::{
     time::Duration,
     error::Error,
@@ -14,6 +14,10 @@ pub use crate::core::color::*;
 /// Reexported from minifb
 ///
 pub use minifb::Key as Key;
+
+/// Reexported from minifb
+///
+pub use minifb::MouseButton as MouseButton;
 
 use crate::core::rendertarget::*;
 use crate::math::{Vec2, IVec2, vec2};
@@ -243,6 +247,52 @@ impl RainCore {
     /// ```
     pub fn get_keys(&self) -> Option<Vec<Key>> {
         self.window.get_keys()
+    }
+
+    /// Get mouse position relative to the window, (0, 0) in upper left corner
+    ///
+    /// ### Example
+    /// ```no_run
+    /// # use rain2d::core::*;
+    /// # let core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// if let Some(pos) = core.get_mouse_pos() {
+    ///     println!("x: {}, y: {}", pos.x, pos.y);
+    /// }
+    /// ```
+    pub fn get_mouse_pos(&self) -> Option<Vec2> {
+        if let Some((x, y)) = self.window.get_mouse_pos(MouseMode::Pass) {
+            return Some(vec2(x, y));
+        }
+        None
+    }
+
+    /// Checks if the button is currently down
+    ///
+    /// ### Example
+    /// ```no_run
+    /// # use rain2d::core::*;
+    /// # let core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// core.mouse_button_down(MouseButton::Left);
+    /// ```
+    pub fn mouse_button_down(&self, button: MouseButton) -> bool {
+        self.window.get_mouse_down(button)
+    }
+
+    /// Get current scroll wheel movement
+    ///
+    /// ### Example
+    /// ```no_run
+    /// # use rain2d::core::*;
+    /// # let core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// if let Some(scroll) = core.get_scroll_wheel() {
+    ///     println!("x: {}, y: {}", scroll.x, scroll.y);
+    /// }
+    /// ```
+    pub fn get_scroll_wheel(&self) -> Option<Vec2> {
+        if let Some((x, y)) = self.window.get_scroll_wheel() {
+            return Some(vec2(x, y));
+        }
+        None
     }
 
     /// Draws a pixel if the location is in bounds after casting the coordinates to `i32`
