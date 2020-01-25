@@ -1,9 +1,14 @@
 [package]
 name = "rain2d"
 version = "0.1.0"
-authors = ["Finn Vos <finnvos34@protonmail.ch>"]
-edition = "2018"
 license = "MIT"
+authors = ["Finn Vos <finnvos34@protonmail.ch>"]
+description = "Simple 2D game engine"
+keywords = ["game", "engine", "2D"]
+categories = ["game-engines", "graphics"]
+homepage = "https://github.com/fiinnnn/rain2d"
+repository = "https://github.com/fiinnnn/rain2d"
+edition = "2018"
 
 [dependencies]
 minifb = "0.15.1"
