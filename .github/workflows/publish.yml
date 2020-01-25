@@ -2,12 +2,15 @@ name: publish
 
 on:
   release:
-    types: [published]
+    types: [published, edited]
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v1
+
       - name: Publish crate
         uses: actions-rs/cargo@v1
         with:
