@@ -1,6 +1,6 @@
 [package]
 name = "rain2d"
-version = "0.1.0"
+version = "0.1.1"
 license = "MIT"
 authors = ["Finn Vos <finnvos34@protonmail.ch>"]
 description = "Simple 2D game engine"
