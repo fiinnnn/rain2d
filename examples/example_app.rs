@@ -12,7 +12,7 @@ fn main() {
     let mut core = RainCore::init("example app",
         WIDTH,
         HEIGHT,
-        true).unwrap();
+        true);
 
     core.run(&mut ExampleApp {});
 }

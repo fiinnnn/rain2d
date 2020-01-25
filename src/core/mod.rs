@@ -4,7 +4,6 @@
 use minifb::{Window, WindowOptions, KeyRepeat, MouseMode};
 use std::{
     time::Duration,
-    error::Error,
     time::Instant,
     mem::swap
 };
@@ -51,7 +50,7 @@ mod rendertarget;
 /// let mut core = RainCore::init("example app",
 ///     640,
 ///     360,
-///     true).unwrap();
+///     true);
 ///
 /// core.run(&mut App {});
 /// ```
@@ -79,7 +78,7 @@ pub struct RainCore {
 
     active: bool,
     window_title: String,
-    window: Window,
+    window: Option<Window>,
     screen_width: usize,
     screen_height: usize,
     render_target: RenderTarget,
@@ -101,25 +100,20 @@ impl RainCore {
     /// let mut core = RainCore::init("example app",
     ///         640,
     ///         360,
-    ///         true).unwrap();
+    ///         true);
     /// ```
-    pub fn init(window_title: &str, width: usize, height: usize, exit_on_esc: bool) -> Result<Self, Box<dyn Error>> {
-        let window = Window::new(window_title,
-            width,
-            height,
-            WindowOptions::default())?;
-
-        Ok(RainCore {
+    pub fn init(window_title: &str, width: usize, height: usize, exit_on_esc: bool) -> Self {
+        RainCore {
             exit_on_esc,
             active: true,
             window_title: window_title.to_string(),
-            window,
+            window: None,
             render_target: RenderTarget::new(width, height),
             screen_width: width,
             screen_height: height,
             frame_timer: 1.0,
             frame_count: 0,
-        })
+        }
     }
 
     /// Starts the main loop
@@ -137,10 +131,15 @@ impl RainCore {
     ///
     /// impl RainApp for ExampleApp {}
     ///
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.run(&mut ExampleApp {});
     /// ```
     pub fn run(&mut self, app: &mut dyn RainApp) {
+        self.window = Some(Window::new(&self.window_title,
+                                 self.screen_width,
+                                 self.screen_height,
+                                 WindowOptions::default()).unwrap());
+
         app.on_start();
 
         let mut last_time = Instant::now();
@@ -153,27 +152,36 @@ impl RainCore {
             app.on_update(self, elapsed);
 
             // draw to screen
-            self.window.update_with_buffer(&self.render_target.data,
-                                           self.render_target.width,
-                                           self.render_target.height).unwrap();
+            if let Some(window) = &mut self.window {
+                window.update_with_buffer(&self.render_target.data,
+                                               self.render_target.width,
+                                               self.render_target.height).unwrap();
+
+            }
 
             // update frame count
             self.frame_timer += elapsed.as_secs_f32();
             self.frame_count += 1;
             if self.frame_timer >= 1.0 {
                 self.frame_timer -= 1.0;
-                let title = format!("{} - FPS: {}", self.window_title, self.frame_count);
-                self.window.set_title(&title);
+
+                if let Some(window) = &mut self.window {
+                    let title = format!("{} - FPS: {}", self.window_title, self.frame_count);
+                    window.set_title(&title);
+                }
+
                 self.frame_count = 0;
             }
 
-            // check window status
-            if !self.window.is_open() {
-                self.active = false;
-            }
+            if let Some(window) = &self.window {
+                // check window status
+                if !window.is_open() {
+                    self.active = false;
+                }
 
-            if self.exit_on_esc && self.window.is_key_down(Key::Escape) {
-                self.active = false;
+                if self.exit_on_esc && window.is_key_down(Key::Escape) {
+                    self.active = false;
+                }
             }
         }
 
@@ -189,7 +197,7 @@ impl RainCore {
     ///# let mut core = RainCore::init("example app",
     ///#     640,
     ///#     360,
-    ///#     true).unwrap();
+    ///#     true);
     ///#
     ///# core.run(&mut App {});
     ///#
@@ -212,23 +220,32 @@ impl RainCore {
     /// ### Example
     /// ```no_run
     /// # use rain2d::core::*;
-    /// # let core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let core = RainCore::init("example app", 640, 360, true);
     /// if core.key_down(Key::Space) {
     ///     println!("Spacebar down");
     /// }
     /// ```
     pub fn key_down(&self, key: Key) -> bool {
-        self.window.is_key_down(key)
+        if let Some(window) = &self.window {
+            return window.is_key_down(key);
+        }
+        false
     }
 
     /// Checks if the key was pressed (not held) since the last update
     pub fn key_pressed(&self, key: Key) -> bool {
-        self.window.is_key_pressed(key, KeyRepeat::No)
+        if let Some(window) = &self.window {
+            return window.is_key_pressed(key, KeyRepeat::No);
+        }
+        false
     }
 
     /// Checks if the key was released since the last update
     pub fn key_released(&self, key: Key) -> bool {
-        self.window.is_key_released(key)
+        if let Some(window) = &self.window {
+            window.is_key_released(key);
+        }
+        false
     }
 
     /// Gets all keys that are currently down
@@ -236,7 +253,7 @@ impl RainCore {
     /// ### Example
     /// ```no_run
     /// # use rain2d::core::*;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.get_keys().map(|keys| {
     ///     for key in keys {
     ///         match key {
@@ -248,7 +265,10 @@ impl RainCore {
     /// });
     /// ```
     pub fn get_keys(&self) -> Option<Vec<Key>> {
-        self.window.get_keys()
+        if let Some(window) = &self.window {
+            return window.get_keys();
+        }
+        None
     }
 
     /// Get mouse position relative to the window, (0, 0) in upper left corner
@@ -256,14 +276,16 @@ impl RainCore {
     /// ### Example
     /// ```no_run
     /// # use rain2d::core::*;
-    /// # let core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let core = RainCore::init("example app", 640, 360, true);
     /// if let Some(pos) = core.get_mouse_pos() {
     ///     println!("x: {}, y: {}", pos.x, pos.y);
     /// }
     /// ```
     pub fn get_mouse_pos(&self) -> Option<Vec2> {
-        if let Some((x, y)) = self.window.get_mouse_pos(MouseMode::Pass) {
-            return Some(vec2(x, y));
+        if let Some(window) = &self.window {
+            if let Some((x, y)) = window.get_mouse_pos(MouseMode::Pass) {
+                return Some(vec2(x, y));
+            }
         }
         None
     }
@@ -273,13 +295,16 @@ impl RainCore {
     /// ### Example
     /// ```no_run
     /// # use rain2d::core::*;
-    /// # let core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let core = RainCore::init("example app", 640, 360, true);
     /// if core.mouse_button_down(MouseButton::Left) {
     ///     println!("Left mouse button down");
     /// }
     /// ```
     pub fn mouse_button_down(&self, button: MouseButton) -> bool {
-        self.window.get_mouse_down(button)
+        if let Some(window) = &self.window {
+            return window.get_mouse_down(button);
+        }
+        false
     }
 
     /// Get current scroll wheel movement
@@ -287,14 +312,16 @@ impl RainCore {
     /// ### Example
     /// ```no_run
     /// # use rain2d::core::*;
-    /// # let core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let core = RainCore::init("example app", 640, 360, true);
     /// if let Some(scroll) = core.get_scroll_wheel() {
     ///     println!("x: {}, y: {}", scroll.x, scroll.y);
     /// }
     /// ```
     pub fn get_scroll_wheel(&self) -> Option<Vec2> {
-        if let Some((x, y)) = self.window.get_scroll_wheel() {
-            return Some(vec2(x, y));
+        if let Some(window) = &self.window {
+            if let Some((x, y)) = window.get_scroll_wheel() {
+                return Some(vec2(x, y));
+            }
         }
         None
     }
@@ -305,7 +332,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.draw_f(vec2(10.0, 10.0), WHITE);
     /// ```
     pub fn draw_f(&mut self, pos: Vec2, color: Color) {
@@ -318,7 +345,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.draw(vec2(10, 10), WHITE);
     /// ```
     pub fn draw(&mut self, pos: IVec2, color: Color) {
@@ -331,7 +358,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.draw_line_f(vec2(10.0, 10.0), vec2(100.0, 50.0), WHITE);
     /// ```
     pub fn draw_line_f(&mut self, p1: Vec2, p2: Vec2, color: Color) {
@@ -344,7 +371,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.draw_line(vec2(10, 10), vec2(100, 50), WHITE);
     /// ```
     pub fn draw_line(&mut self, p1: IVec2, p2: IVec2, color: Color) {
@@ -395,7 +422,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.draw_circle_f(vec2(100.0, 100.0), 10, WHITE);
     /// ```
     pub fn draw_circle_f(&mut self, pos: Vec2, r: i32, color: Color) {
@@ -408,7 +435,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.draw_circle(vec2(100, 100), 10, WHITE);
     /// ```
     pub fn draw_circle(&mut self, pos: IVec2, r: i32, color: Color) {
@@ -437,7 +464,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.fill_circle_f(vec2(100.0, 100.0), 10, WHITE);
     /// ```
     pub fn fill_circle_f(&mut self, pos: Vec2, r: i32, color: Color) {
@@ -450,7 +477,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.fill_circle(vec2(100, 100), 10, WHITE);
     /// ```
     pub fn fill_circle(&mut self, pos: IVec2, r: i32, color: Color) {
@@ -475,7 +502,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.draw_rect_f(vec2(100.0, 100.0), vec2(50.0, 50.0), WHITE);
     /// ```
     pub fn draw_rect_f(&mut self, pos: Vec2, size: Vec2, color: Color) {
@@ -488,7 +515,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.draw_rect(vec2(100, 100), vec2(50, 50), WHITE);
     /// ```
     pub fn draw_rect(&mut self, pos: IVec2, size: IVec2, color: Color) {
@@ -507,7 +534,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.fill_rect_f(vec2(100.0, 100.0), vec2(50.0, 50.0), WHITE);
     /// ```
     pub fn fill_rect_f(&mut self, pos: Vec2, size: Vec2, color: Color) {
@@ -520,7 +547,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.fill_rect(vec2(100, 100), vec2(50, 50), WHITE);
     /// ```
     pub fn fill_rect(&mut self, pos: IVec2, size: IVec2, color: Color) {
@@ -538,7 +565,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.draw_triangle_f(vec2(25.0, 100.0), vec2(75.0, 100.0), vec2(50.0, 0.0), WHITE);
     /// ```
     pub fn draw_triangle_f(&mut self, p1: Vec2, p2: Vec2, p3: Vec2, color: Color) {
@@ -551,7 +578,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.draw_triangle(vec2(25, 100), vec2(75, 100), vec2(50, 0), WHITE);
     /// ```
     pub fn draw_triangle(&mut self, p1: IVec2, p2: IVec2, p3: IVec2, color: Color) {
@@ -566,7 +593,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.fill_triangle_f(vec2(25.0, 100.0), vec2(75.0, 100.0), vec2(50.0, 0.0), WHITE);
     /// ```
     pub fn fill_triangle_f(&mut self, p1: Vec2, p2: Vec2, p3: Vec2, color: Color) {
@@ -579,7 +606,7 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true).unwrap();
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
     /// core.fill_triangle(vec2(25, 100), vec2(75, 100), vec2(50, 0), WHITE);
     /// ```
     // http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
@@ -638,7 +665,31 @@ impl RainCore {
     }
 }
 
-#[inline]
 fn vec2_to_ivec2(v: Vec2) -> IVec2 {
     vec2(v.x as i32, v.y as i32)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    fn create_core(w: usize, h: usize) -> RainCore {
+        RainCore::init("", w, h, false)
+    }
+
+    #[test]
+    fn test_draw_f() {
+        let mut core = create_core(10, 10);
+
+        core.draw_f(vec2(1.5, 2.0), WHITE);
+        assert_eq!(core.render_target.get_pixel(1, 2), Some(WHITE));
+    }
+
+    #[test]
+    fn test_draw() {
+        let mut core = create_core(10, 10);
+
+        core.draw(vec2(5, 3), WHITE);
+        assert_eq!(core.render_target.get_pixel(5, 3), Some(WHITE));
+    }
 }
