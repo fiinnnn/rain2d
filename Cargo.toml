@@ -8,6 +8,7 @@ keywords = ["game", "engine", "2D"]
 categories = ["game-engines", "graphics"]
 homepage = "https://github.com/fiinnnn/rain2d"
 repository = "https://github.com/fiinnnn/rain2d"
+readme = "README.md"
 edition = "2018"
 
 [dependencies]
