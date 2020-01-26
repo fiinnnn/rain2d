@@ -391,8 +391,8 @@ impl RainCore {
         let mut y1 = p1.y;
         let mut x2 = p2.x;
         let mut y2 = p2.y;
-        let dx = i32::abs(x2 - x1);
-        let dy = i32::abs(y2 - y1);
+        let dx = x2 - x1;
+        let dy = y2 - y1;
 
         // vertical line
         if dx == 0 {
@@ -412,19 +412,47 @@ impl RainCore {
             return;
         }
 
-        let sx = if x1 < x2 { 1 } else { -1 };
-        let sy = if y1 < y2 { 1 } else { -1 };
-        let mut err = if dx > dy { dx / 2 } else { -dy / 2 };
+        let dx_abs = dx.abs(); let dy_abs = dy.abs();
+        let mut px = 2 * dy_abs - dx_abs; let mut py = 2 * dx_abs - dy_abs;
+        let mut x; let mut y; let x_end; let y_end;
 
-        loop {
-            self.draw(vec2(x1, y1), color);
-            if (x1 == x2 && y1 == y2)
-                || x1 < 0 || x1 > self.screen_width as i32
-                || y1 < 0 || y1 > self.screen_height as i32 {
-                break;
+        if dy_abs <= dx_abs {
+            if dx >= 0 {
+                x = x1; y = y1; x_end = x2;
+            } else {
+                x = x2; y = y2; x_end = x1;
             }
-            if err > -dx { err -= dy; x1 += sx; }
-            if err < dy { err += dx; y1 += sy; }
+
+            self.draw(vec2(x, y), color);
+
+            while x < x_end {
+                x += 1;
+                if px < 0 { px += 2 * dy_abs; }
+                else {
+                    if (dx < 0 && dy < 0) || (dx > 0 && dy > 0) { y += 1; }
+                    else { y -= 1; }
+                    px += 2 * (dy_abs - dx_abs);
+                }
+                self.draw(vec2(x, y), color);
+            }
+        } else {
+            if dy >= 0 {
+                x = x1; y = y1; y_end = y2;
+            } else {
+                x = x2; y = y2; y_end = y1;
+            }
+
+            self.draw(vec2(x, y), color);
+
+            while y < y_end {
+                y += 1;
+                if py <= 0 { py += 2 * dx_abs; }
+                else {
+                    if (dx < 0 && dy < 0) || (dx > 0 && dy > 0) { x += 1; }
+                    else { x -= 1; }
+                    self.draw(vec2(x, y), color);
+                }
+            }
         }
     }
 
