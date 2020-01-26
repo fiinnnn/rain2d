@@ -2,6 +2,7 @@
 //! rain2d core functionality
 
 use minifb::{Window, WindowOptions, KeyRepeat, MouseMode};
+use bresenham::Bresenham;
 use std::{
     time::Duration,
     time::Instant,
@@ -391,11 +392,9 @@ impl RainCore {
         let mut y1 = p1.y;
         let mut x2 = p2.x;
         let mut y2 = p2.y;
-        let dx = x2 - x1;
-        let dy = y2 - y1;
 
         // vertical line
-        if dx == 0 {
+        if x2 - x1 == 0 {
             if y2 < y1 { swap(&mut y1, &mut y2); }
             for y in y1..y2 {
                 self.draw(vec2(x1, y), color);
@@ -404,7 +403,7 @@ impl RainCore {
         }
 
         // horizontal line
-        if dy == 0 {
+        if y2 - y1 == 0 {
             if x2 < x1 { swap(&mut x1, &mut x2); }
             for x in x1..x2 {
                 self.draw(vec2(x, y1), color);
@@ -412,47 +411,8 @@ impl RainCore {
             return;
         }
 
-        let dx_abs = dx.abs(); let dy_abs = dy.abs();
-        let mut px = 2 * dy_abs - dx_abs; let mut py = 2 * dx_abs - dy_abs;
-        let mut x; let mut y; let x_end; let y_end;
-
-        if dy_abs <= dx_abs {
-            if dx >= 0 {
-                x = x1; y = y1; x_end = x2;
-            } else {
-                x = x2; y = y2; x_end = x1;
-            }
-
-            self.draw(vec2(x, y), color);
-
-            while x < x_end {
-                x += 1;
-                if px < 0 { px += 2 * dy_abs; }
-                else {
-                    if (dx < 0 && dy < 0) || (dx > 0 && dy > 0) { y += 1; }
-                    else { y -= 1; }
-                    px += 2 * (dy_abs - dx_abs);
-                }
-                self.draw(vec2(x, y), color);
-            }
-        } else {
-            if dy >= 0 {
-                x = x1; y = y1; y_end = y2;
-            } else {
-                x = x2; y = y2; y_end = y1;
-            }
-
-            self.draw(vec2(x, y), color);
-
-            while y < y_end {
-                y += 1;
-                if py <= 0 { py += 2 * dx_abs; }
-                else {
-                    if (dx < 0 && dy < 0) || (dx > 0 && dy > 0) { x += 1; }
-                    else { x -= 1; }
-                    self.draw(vec2(x, y), color);
-                }
-            }
+        for (x,y) in Bresenham::new((x1 as isize, y1 as isize), (x2 as isize, y2 as isize)) {
+            self.draw(vec2(x as i32, y as i32), color);
         }
     }
 
