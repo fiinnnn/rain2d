@@ -326,6 +326,18 @@ impl RainCore {
         None
     }
 
+    /// Clears the screen with the provided color
+    ///
+    /// ### Example
+    /// ```no_run
+    /// # use rain2d::core::*;
+    /// # let mut core = RainCore::init("example app", 640, 360, true);
+    /// core.clear(NONE);
+    /// ```
+    pub fn clear(&mut self, color: Color) {
+        self.render_target.clear(color);
+    }
+
     /// Draws a pixel if the location is in bounds after casting the coordinates to `i32`
     ///
     /// ### Example
@@ -675,6 +687,16 @@ mod test {
 
     fn create_core(w: usize, h: usize) -> RainCore {
         RainCore::init("", w, h, false)
+    }
+
+    #[test]
+    fn test_clear() {
+        let mut core = create_core(10, 10);
+
+        core.clear(WHITE);
+        for p in core.render_target.data {
+            assert_eq!(p, WHITE.into());
+        }
     }
 
     #[test]

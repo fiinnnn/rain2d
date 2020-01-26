@@ -16,6 +16,12 @@ impl RenderTarget {
         }
     }
 
+    pub fn clear(&mut self, color: Color) {
+        for p in self.data.iter_mut() {
+            *p = color.into();
+        }
+    }
+
     pub fn set_pixel(&mut self, x: i32, y: i32, color: Color) {
         if x >= 0 && x < self.width as i32 && y >= 0 && y < self.height as i32 {
             self.data[(x + y * self.width as i32) as usize] = color.into();
@@ -42,6 +48,16 @@ mod test {
         assert_eq!(target.height, 10);
         assert_eq!(target.data.len(), 10 * 10);
         assert_eq!(target.data.iter().sum::<u32>(), 0);
+    }
+
+    #[test]
+    fn test_clear() {
+        let mut target = RenderTarget::new(10, 10);
+        target.clear(WHITE);
+
+        for p in target.data {
+            assert_eq!(p, WHITE.into());
+        }
     }
 
     #[test]

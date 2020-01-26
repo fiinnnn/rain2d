@@ -23,6 +23,7 @@ struct ExampleApp;
 impl RainApp for ExampleApp {
     fn on_update(&mut self, rain: &mut RainCore, _dt: Duration) {
         // drawing
+        rain.clear(NONE);
         rain.fill_triangle(vec2(120, 300), vec2(520, 300), vec2(320, 100), WHITE);
 
         // keyboard input
