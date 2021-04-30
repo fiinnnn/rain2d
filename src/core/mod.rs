@@ -20,7 +20,6 @@ pub use minifb::Key as Key;
 pub use minifb::MouseButton as MouseButton;
 
 use crate::core::rendertarget::*;
-use crate::math::{Vec2, IVec2, vec2};
 
 mod color;
 mod rendertarget;
@@ -278,15 +277,13 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # let core = RainCore::init("example app", 640, 360, true);
-    /// if let Some(pos) = core.get_mouse_pos() {
-    ///     println!("x: {}, y: {}", pos.x, pos.y);
+    /// if let Some((x, y)) = core.get_mouse_pos() {
+    ///     println!("x: {}, y: {}", x, y);
     /// }
     /// ```
-    pub fn get_mouse_pos(&self) -> Option<Vec2> {
+    pub fn get_mouse_pos(&self) -> Option<(f32, f32)> {
         if let Some(window) = &self.window {
-            if let Some((x, y)) = window.get_mouse_pos(MouseMode::Pass) {
-                return Some(vec2(x, y));
-            }
+            return window.get_mouse_pos(MouseMode::Pass);
         }
         None
     }
@@ -314,15 +311,13 @@ impl RainCore {
     /// ```no_run
     /// # use rain2d::core::*;
     /// # let core = RainCore::init("example app", 640, 360, true);
-    /// if let Some(scroll) = core.get_scroll_wheel() {
-    ///     println!("x: {}, y: {}", scroll.x, scroll.y);
+    /// if let Some((x, y)) = core.get_scroll_wheel() {
+    ///     println!("x: {}, y: {}", x, y);
     /// }
     /// ```
-    pub fn get_scroll_wheel(&self) -> Option<Vec2> {
+    pub fn get_scroll_wheel(&self) -> Option<(f32,f32)> {
         if let Some(window) = &self.window {
-            if let Some((x, y)) = window.get_scroll_wheel() {
-                return Some(vec2(x, y));
-            }
+            return window.get_scroll_wheel();
         }
         None
     }
@@ -339,65 +334,33 @@ impl RainCore {
         self.render_target.clear(color);
     }
 
-    /// Draws a pixel if the location is in bounds after casting the coordinates to `i32`
-    ///
-    /// ### Example
-    /// ```no_run
-    /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.draw_f(vec2(10.0, 10.0), WHITE);
-    /// ```
-    pub fn draw_f(&mut self, pos: Vec2, color: Color) {
-        self.render_target.set_pixel(pos.x as i32, pos.y as i32, color);
-    }
-
     /// Draws a pixel if the location is in bounds
     ///
     /// ### Example
     /// ```no_run
     /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
     /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.draw(vec2(10, 10), WHITE);
+    /// core.draw(10, 10, WHITE);
     /// ```
-    pub fn draw(&mut self, pos: IVec2, color: Color) {
-        self.render_target.set_pixel(pos.x, pos.y, color);
+    pub fn draw(&mut self, x: i32, y: i32, color: Color) {
+        self.render_target.set_pixel(x, y, color);
     }
 
-    /// Draws a line from `p1` to `p2` after casting the coordinates to `i32`
+    /// Draws a line from `(x1, y1)` to `(x2, y2)`
     ///
     /// ### Example
     /// ```no_run
     /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
     /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.draw_line_f(vec2(10.0, 10.0), vec2(100.0, 50.0), WHITE);
+    /// core.draw_line(10, 10, 100, 50, WHITE);
     /// ```
-    pub fn draw_line_f(&mut self, p1: Vec2, p2: Vec2, color: Color) {
-        self.draw_line(vec2_to_ivec2(p1), vec2_to_ivec2(p2), color);
-    }
-
-    /// Draws a line from `p1` to `p2`
-    ///
-    /// ### Example
-    /// ```no_run
-    /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.draw_line(vec2(10, 10), vec2(100, 50), WHITE);
-    /// ```
-    pub fn draw_line(&mut self, p1: IVec2, p2: IVec2, color: Color) {
-        let mut x1 = p1.x;
-        let mut y1 = p1.y;
-        let mut x2 = p2.x;
-        let mut y2 = p2.y;
+    pub fn draw_line(&mut self, mut x1: i32, mut y1: i32, mut x2: i32, mut y2: i32, color: Color) {
 
         // vertical line
         if x2 - x1 == 0 {
             if y2 < y1 { swap(&mut y1, &mut y2); }
             for y in y1..y2 {
-                self.draw(vec2(x1, y), color);
+                self.draw(x1, y, color);
             }
             return;
         }
@@ -406,267 +369,177 @@ impl RainCore {
         if y2 - y1 == 0 {
             if x2 < x1 { swap(&mut x1, &mut x2); }
             for x in x1..x2 {
-                self.draw(vec2(x, y1), color);
+                self.draw(x, y1, color);
             }
             return;
         }
 
         for (x,y) in Bresenham::new((x1 as isize, y1 as isize), (x2 as isize, y2 as isize)) {
-            self.draw(vec2(x as i32, y as i32), color);
+            self.draw(x as i32, y as i32, color);
         }
     }
 
-    /// Draws a circle at `pos` with radius `r` after casting the coordinates to `i32`
+    /// Draws a circle at `(x, y)` with radius `r`
     ///
     /// ### Example
     /// ```no_run
     /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
     /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.draw_circle_f(vec2(100.0, 100.0), 10, WHITE);
+    /// core.draw_circle(100, 100, 10, WHITE);
     /// ```
-    pub fn draw_circle_f(&mut self, pos: Vec2, r: i32, color: Color) {
-        self.draw_circle(vec2_to_ivec2(pos), r, color);
-    }
-
-    /// Draws a circle at `pos` with radius `r`
-    ///
-    /// ### Example
-    /// ```no_run
-    /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.draw_circle(vec2(100, 100), 10, WHITE);
-    /// ```
-    pub fn draw_circle(&mut self, pos: IVec2, r: i32, color: Color) {
+    pub fn draw_circle(&mut self, x: i32, y: i32, r: i32, color: Color) {
         let mut x0 = 0;
         let mut y0 = r;
         let mut d = 3 - 2 * r;
         if r <= 0 { return; }
 
         while y0 >= x0 {
-            self.draw(vec2(pos.x + x0, pos.y - y0), color);
-            self.draw(vec2(pos.x + y0, pos.y - x0), color);
-            self.draw(vec2(pos.x + y0, pos.y + x0), color);
-            self.draw(vec2(pos.x + x0, pos.y + y0), color);
-            self.draw(vec2(pos.x - x0, pos.y - y0), color);
-            self.draw(vec2(pos.x - y0, pos.y - x0), color);
-            self.draw(vec2(pos.x - y0, pos.y + x0), color);
-            self.draw(vec2(pos.x - x0, pos.y + y0), color);
+            self.draw(x + x0, y - y0, color);
+            self.draw(x + y0, y - x0, color);
+            self.draw(x + y0, y + x0, color);
+            self.draw(x + x0, y + y0, color);
+            self.draw(x - x0, y - y0, color);
+            self.draw(x - y0, y - x0, color);
+            self.draw(x - y0, y + x0, color);
+            self.draw(x - x0, y + y0, color);
             if d < 0 { d += 4 * x0 + 6; x0 += 1; }
             else { x0 += 1; y0 -= 1; d += 4 * (x0 - y0) + 10; }
         }
     }
 
-    /// Draws a filled in circle at `pos` with radius `r` after casting the coordinates to `i32`
+    /// Draws a filled in circle at `(x, y)` with radius `r`
     ///
     /// ### Example
     /// ```no_run
     /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
     /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.fill_circle_f(vec2(100.0, 100.0), 10, WHITE);
+    /// core.fill_circle(100, 100, 10, WHITE);
     /// ```
-    pub fn fill_circle_f(&mut self, pos: Vec2, r: i32, color: Color) {
-        self.fill_circle(vec2_to_ivec2(pos), r, color);
-    }
-
-    /// Draws a filled in circle at `pos` with radius `r`
-    ///
-    /// ### Example
-    /// ```no_run
-    /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.fill_circle(vec2(100, 100), 10, WHITE);
-    /// ```
-    pub fn fill_circle(&mut self, pos: IVec2, r: i32, color: Color) {
+    pub fn fill_circle(&mut self, x: i32, y: i32, r: i32, color: Color) {
         let mut x0 = 0;
         let mut y0 = r;
         let mut d = 3 - 2 * r;
         if r <= 0 { return; }
 
         while y0 >= x0 {
-            self.draw_line(vec2(pos.x - x0, pos.y - y0), vec2(pos.x + x0, pos.y - y0), color);
-            self.draw_line(vec2(pos.x - y0, pos.y - x0), vec2(pos.x + y0, pos.y - x0), color);
-            self.draw_line(vec2(pos.x - x0, pos.y + y0), vec2(pos.x + x0, pos.y + y0), color);
-            self.draw_line(vec2(pos.x - y0, pos.y + x0), vec2(pos.x + y0, pos.y + x0), color);
+            self.draw_line(x - x0, y - y0, x + x0, y - y0, color);
+            self.draw_line(x - y0, y - x0, x + y0, y - x0, color);
+            self.draw_line(x - x0, y + y0, x + x0, y + y0, color);
+            self.draw_line(x - y0, y + x0, x + y0, y + x0, color);
             if d < 0 { d += 4 * x0 + 6; x0 += 1; }
             else { x0 += 1; y0 -= 1; d += 4 * (x0 - y0) + 10; }
         }
     }
 
-    /// Draws a rectangle at `pos` with `size` after casting the coordinates and size to `i32`
+    /// Draws a rectangle at `(x, y)` with specified dimensions
     ///
     /// ### Example
     /// ```no_run
     /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
     /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.draw_rect_f(vec2(100.0, 100.0), vec2(50.0, 50.0), WHITE);
+    /// core.draw_rect(100, 100, 50, 50, WHITE);
     /// ```
-    pub fn draw_rect_f(&mut self, pos: Vec2, size: Vec2, color: Color) {
-        self.draw_rect(vec2_to_ivec2(pos), vec2_to_ivec2(size), color);
+    pub fn draw_rect(&mut self, x: i32, y: i32, width: i32, height: i32, color: Color) {
+        self.draw_line(x, y, x + width, y, color);
+        self.draw_line(x + width, y, x + width, y + height, color);
+        self.draw_line(x + width, y + height, x, y + height, color);
+        self.draw_line(x, y + height, x, y, color);
     }
 
-    /// Draws a rectangle at `pos` with `size`
+    /// Draws a filled in rectangle at `(x, y)` with specified dimensions
     ///
     /// ### Example
     /// ```no_run
     /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
     /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.draw_rect(vec2(100, 100), vec2(50, 50), WHITE);
+    /// core.fill_rect(100, 100, 50, 50, WHITE);
     /// ```
-    pub fn draw_rect(&mut self, pos: IVec2, size: IVec2, color: Color) {
-        let p2 = vec2(pos.x + size.x, pos.y);
-        let p3 = vec2(pos.x + size.x, pos.y + size.y);
-        let p4 = vec2(pos.x, pos.y + size.y);
-        self.draw_line(pos, p2, color);
-        self.draw_line(p2, p3, color);
-        self.draw_line(p3, p4, color);
-        self.draw_line(p4, pos, color);
-    }
-
-    /// Draws a filled in rectangle at `pos` with `size` after casting the coordinates and size to `i32`
-    ///
-    /// ### Example
-    /// ```no_run
-    /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.fill_rect_f(vec2(100.0, 100.0), vec2(50.0, 50.0), WHITE);
-    /// ```
-    pub fn fill_rect_f(&mut self, pos: Vec2, size: Vec2, color: Color) {
-        self.fill_rect(vec2_to_ivec2(pos), vec2_to_ivec2(size), color);
-    }
-
-    /// Draws a filled in rectangle at `pos` with `size`
-    ///
-    /// ### Example
-    /// ```no_run
-    /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.fill_rect(vec2(100, 100), vec2(50, 50), WHITE);
-    /// ```
-    pub fn fill_rect(&mut self, pos: IVec2, size: IVec2, color: Color) {
-        let p2 = pos + size;
-        for i in pos.x..p2.x {
-            for j in pos.y..p2.y {
-                self.draw(vec2(i, j), color);
+    pub fn fill_rect(&mut self, x: i32, y: i32, width: i32, height: i32, color: Color) {
+        let x_max = x + width;
+        let y_max = y + height;
+        for i in x..x_max {
+            for j in y..y_max {
+                self.draw(i, j, color);
             }
         }
     }
 
-    /// Draws a triangle with vertices `p1`, `p2` and `p3` after casting the coordinates to `i32`
+    /// Draws a triangle with vertices `(x1, y1)`, `(x2, y2)` and `(x3, y3)`
     ///
     /// ### Example
     /// ```no_run
     /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
     /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.draw_triangle_f(vec2(25.0, 100.0), vec2(75.0, 100.0), vec2(50.0, 0.0), WHITE);
+    /// core.draw_triangle(25, 100, 75, 100, 50, 0, WHITE);
     /// ```
-    pub fn draw_triangle_f(&mut self, p1: Vec2, p2: Vec2, p3: Vec2, color: Color) {
-        self.draw_triangle(vec2_to_ivec2(p1), vec2_to_ivec2(p2), vec2_to_ivec2(p3), color);
+    pub fn draw_triangle(&mut self, x1: i32, y1: i32, x2: i32, y2: i32, x3: i32, y3: i32, color: Color) {
+        self.draw_line(x1, y1, x2, y2, color);
+        self.draw_line(x2, y2, x3, y3, color);
+        self.draw_line(x3, y3, x1, y1, color);
     }
 
-    /// Draws a triangle with vertices `p1`, `p2` and `p3`
+    /// Draws a filled in triangle with vertices `(x1, y1)`, `(x2, y2)` and `(x3, y3)`
     ///
     /// ### Example
     /// ```no_run
     /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
     /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.draw_triangle(vec2(25, 100), vec2(75, 100), vec2(50, 0), WHITE);
-    /// ```
-    pub fn draw_triangle(&mut self, p1: IVec2, p2: IVec2, p3: IVec2, color: Color) {
-        self.draw_line(p1, p2, color);
-        self.draw_line(p2, p3, color);
-        self.draw_line(p3, p1, color);
-    }
-
-    /// Draws a filled in triangle with vertices `p1`, `p2` and `p3` after casting the coordinates to `i32`
-    ///
-    /// ### Example
-    /// ```no_run
-    /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.fill_triangle_f(vec2(25.0, 100.0), vec2(75.0, 100.0), vec2(50.0, 0.0), WHITE);
-    /// ```
-    pub fn fill_triangle_f(&mut self, p1: Vec2, p2: Vec2, p3: Vec2, color: Color) {
-        self.fill_triangle(vec2_to_ivec2(p1), vec2_to_ivec2(p2), vec2_to_ivec2(p3), color);
-    }
-
-    /// Draws a filled in triangle with vertices `p1`, `p2` and `p3`
-    ///
-    /// ### Example
-    /// ```no_run
-    /// # use rain2d::core::*;
-    /// # use rain2d::math::vec2;
-    /// # let mut core = RainCore::init("example app", 640, 360, true);
-    /// core.fill_triangle(vec2(25, 100), vec2(75, 100), vec2(50, 0), WHITE);
+    /// core.fill_triangle(25, 100, 75, 100, 50, 0, WHITE);
     /// ```
     // http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
-    pub fn fill_triangle(&mut self, mut p1: IVec2, mut p2: IVec2, mut p3: IVec2, color: Color) {
+    pub fn fill_triangle(&mut self, mut x1: i32, mut y1: i32, mut x2: i32, mut y2: i32, mut x3: i32, mut y3: i32, color: Color) {
         // sort vertices
-        if p1.y > p2.y { swap(&mut p1, &mut p2); }
-        if p1.y > p3.y { swap(&mut p1, &mut p3); }
-        if p2.y > p3.y { swap(&mut p2, &mut p3); }
+        if y1 > y2 { swap(&mut x1, &mut x2); swap(&mut y1, &mut y2); }
+        if y1 > y3 { swap(&mut x1, &mut x3); swap(&mut y1, &mut y3); }
+        if y2 > y3 { swap(&mut x2, &mut x3); swap(&mut y2, &mut y3); }
 
         // flat bottom triangle
-        if p2.y == p3.y {
-            self.fill_triangle_bottom(p1, p2, p3, color);
+        if y2 == y3 {
+            self.fill_triangle_bottom(x1, y1, x2, y2, x3, y3, color);
         }
         // flat top triangle
-        else if p1.y == p2.y {
-            self.fill_triangle_top(p1, p2, p3, color);
+        else if y1 == y2 {
+            self.fill_triangle_top(x1, y1, x2, y2, x3, y3, color);
         }
         // split triangle and fill sides
         else {
-            let p4 = vec2(p1.x + f32::round(((p2.y - p1.y) as f32 / (p3.y - p1.y) as f32) * (p3.x - p1.x) as f32) as i32, p2.y);
-            self.fill_triangle_bottom(p1, p2, p4, color);
-            self.fill_triangle_top(p2, p4, p3, color);
+            let x4 = x1 + f32::round(((y2 - y1) as f32 / (y3 - y1) as f32) * (x3 - x1) as f32) as i32;
+            self.fill_triangle_bottom(x1, y1, x2, y2, x4, y2, color);
+            self.fill_triangle_top(x2, y2, x4, y2, x3, y3, color);
         }
     }
 
-    fn fill_triangle_bottom(&mut self, p1: IVec2, p2: IVec2, p3: IVec2, color: Color) {
+    fn fill_triangle_bottom(&mut self, x1: i32, y1: i32, x2: i32, y2: i32, x3: i32, y3: i32, color: Color) {
         // calculate slope
-        let s1 = (p2.x - p1.x) as f32 / (p2.y - p1.y) as f32;
-        let s2 = (p3.x - p1.x) as f32 / (p3.y - p1.y) as f32;
+        let s1 = (x2 - x1) as f32 / (y2 - y1) as f32;
+        let s2 = (x3 - x1) as f32 / (y3 - y1) as f32;
 
-        let mut x1 = p1.x as f32;
-        let mut x2 = p1.x as f32;
+        let mut x1 = x1 as f32;
+        let mut x2 = x1 as f32;
 
         // draw scanlines, adjust ends of lines according to slopes
-        for y in p1.y..=p2.y {
-            self.draw_line(vec2(f32::round(x1) as i32, y), vec2(f32::round(x2) as i32, y), color);
+        for y in y1..=y2 {
+            self.draw_line(f32::round(x1) as i32, y, f32::round(x2) as i32, y, color);
             x1 += s1;
             x2 += s2;
         }
     }
 
-    fn fill_triangle_top(&mut self, p1: IVec2, p2: IVec2, p3: IVec2, color: Color) {
+    fn fill_triangle_top(&mut self, x1: i32, y1: i32, x2: i32, y2: i32, x3: i32, y3: i32, color: Color) {
         // calculate slopes
-        let s1 = (p3.x - p1.x) as f32 / (p3.y - p1.y) as f32;
-        let s2 = (p3.x - p2.x) as f32 / (p3.y - p2.y) as f32;
+        let s1 = (x3 - x1) as f32 / (y3 - y1) as f32;
+        let s2 = (x3 - x2) as f32 / (y3 - y2) as f32;
 
-        let mut x1 = p3.x as f32;
-        let mut x2 = p3.x as f32;
+        let mut x1 = x3 as f32;
+        let mut x2 = x3 as f32;
 
         // draw scanlines, adjust ends of lines according to slopes
-        for y in (p1.y..=p3.y).rev() {
-            self.draw_line(vec2(f32::round(x1) as i32, y), vec2(f32::round(x2) as i32, y), color);
+        for y in (y1..=y3).rev() {
+            self.draw_line(f32::round(x1) as i32, y, f32::round(x2) as i32, y, color);
             x1 -= s1;
             x2 -= s2;
         }
     }
-}
-
-fn vec2_to_ivec2(v: Vec2) -> IVec2 {
-    vec2(v.x as i32, v.y as i32)
 }
 
 #[cfg(test)]
@@ -688,18 +561,10 @@ mod test {
     }
 
     #[test]
-    fn test_draw_f() {
-        let mut core = create_core(10, 10);
-
-        core.draw_f(vec2(1.5, 2.0), WHITE);
-        assert_eq!(core.render_target.get_pixel(1, 2), Some(WHITE));
-    }
-
-    #[test]
     fn test_draw() {
         let mut core = create_core(10, 10);
 
-        core.draw(vec2(5, 3), WHITE);
+        core.draw(5, 3, WHITE);
         assert_eq!(core.render_target.get_pixel(5, 3), Some(WHITE));
     }
 }

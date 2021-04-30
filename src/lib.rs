@@ -4,21 +4,12 @@
 //! Provides some utilities to draw basic shapes,
 //! might turn into an actual game engine at some point
 //!
-//! ### Math
-//! [nalgebra-glm](https://nalgebra.org/) is used as the math library and reexported under the
-//! `rain2d::math` namespace
-//!
-//! For documentation see [the official nalgebra-glm documentation](https://nalgebra.org/rustdoc_glm/nalgebra_glm/index.html)
-//!
 //! ### Example
 //!
 //! ```no_run
 //! use std::time::Duration;
 //!
-//! use rain2d::{
-//!     core::*,
-//!     math::vec2,
-//! };
+//! use rain2d::core::*;
 //!
 //! const WIDTH: usize = 640;
 //! const HEIGHT: usize = 360;
@@ -29,7 +20,7 @@
 //! impl RainApp for ExampleApp {
 //!     fn on_update(&mut self, rain: &mut RainCore, dt: Duration) {
 //!         // drawing
-//!         rain.fill_triangle(vec2(120, 300), vec2(520, 300), vec2(320, 100), WHITE);
+//!         rain.fill_triangle(120, 300, 520, 300, 320, 100, WHITE);
 //!
 //!         // keyboard input
 //!         // gets all keys that are currently down
@@ -50,8 +41,8 @@
 //!
 //!         // mouse input
 //!         if rain.mouse_button_down(MouseButton::Left) {
-//!             if let Some(pos) = rain.get_mouse_pos() {
-//!                 println!("Mouse x: {}, Mouse y: {}", pos.x, pos.y);
+//!             if let Some((x, y)) = rain.get_mouse_pos() {
+//!                 println!("Mouse x: {}, Mouse y: {}", x, y);
 //!             }
 //!         }
 //!     }
@@ -64,7 +55,5 @@
 //!
 //! core.run(&mut ExampleApp {});
 //! ```
-
-pub use nalgebra_glm as math;
 
 pub mod core;
