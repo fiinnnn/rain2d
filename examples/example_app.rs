@@ -1,8 +1,7 @@
 use std::time::Duration;
 
 use rain2d::{
-    core::*,
-    math::vec2
+    core::*
 };
 
 const WIDTH: usize = 640;
@@ -24,7 +23,7 @@ impl RainApp for ExampleApp {
     fn on_update(&mut self, rain: &mut RainCore, _dt: Duration) {
         // drawing
         rain.clear(NONE);
-        rain.fill_triangle(vec2(120, 300), vec2(520, 300), vec2(320, 100), WHITE);
+        rain.fill_triangle(120, 300, 520, 300, 320, 100, WHITE);
 
         // keyboard input
         // gets all keys that are currently down
@@ -45,8 +44,8 @@ impl RainApp for ExampleApp {
 
         // mouse input
         if rain.mouse_button_down(MouseButton::Left) {
-            if let Some(pos) = rain.get_mouse_pos() {
-                println!("Mouse x: {}, Mouse y: {}", pos.x, pos.y);
+            if let Some((x, y)) = rain.get_mouse_pos() {
+                println!("Mouse x: {}, Mouse y: {}", x, y);
             }
         }
     }
