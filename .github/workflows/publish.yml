@@ -11,6 +11,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v1
 
+      - name: Install build dependencies
+        run: sudo apt install libxkbcommon-dev
+
       - name: Publish crate
         uses: actions-rs/cargo@v1
         with:
