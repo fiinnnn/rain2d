@@ -22,7 +22,7 @@ jobs:
           override: true
 
       - name: Install build dependencies
-        run: apt-get install libxkbcommon-dev
+        run: sudo apt install libxkbcommon-dev
 
       - name: Build
         run: cargo build --verbose
